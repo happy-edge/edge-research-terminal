@@ -1,0 +1,4 @@
+node_modules/
+rss-state.json
+*.log
+.DS_Store

@@ -1,0 +1,15 @@
+{
+  "name": "edge-research-dashboard",
+  "version": "1.0.0",
+  "description": "Personal Seeking Alpha - Mag 7 Research Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "marked": "^11.1.1",
+    "rss-parser": "^3.13.0"
+  }
+}

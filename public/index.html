@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDGE TERMINAL</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg: #0d0d0d;
+      --panel: #111111;
+      --border: #2a2a2a;
+      --orange: #ff6600;
+      --green: #00ff41;
+      --red: #ff3333;
+      --blue: #00aaff;
+      --yellow: #ffcc00;
+      --text: #cccccc;
+      --text-bright: #ffffff;
+      --text-dim: #666666;
+    }
+    
+    body {
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.4;
+      overflow: hidden;
+      height: 100vh;
+    }
+    
+    /* Top Bar - Bloomberg style */
+    .top-bar {
+      background: linear-gradient(180deg, #1a1a1a 0%, #111 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--orange);
+      letter-spacing: 2px;
+    }
+    
+    .top-info {
+      display: flex;
+      gap: 24px;
+      font-size: 11px;
+    }
+    
+    .top-info span { color: var(--text-dim); }
+    .top-info .value { color: var(--green); margin-left: 4px; }
+    .top-info .value.red { color: var(--red); }
+    
+    /* Main Grid */
+    .terminal-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr 320px;
+      grid-template-rows: auto 1fr;
+      height: calc(100vh - 45px);
+      gap: 1px;
+      background: var(--border);
+    }
+    
+    /* Ticker Bar */
+    .ticker-bar {
+      grid-column: 1 / -1;
+      background: #0a0a0a;
+      padding: 8px 16px;
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    
+    .ticker-btn {
+      padding: 6px 14px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .ticker-btn:hover { border-color: var(--orange); }
+    .ticker-btn.active { 
+      background: var(--orange); 
+      color: #000;
+      border-color: var(--orange);
+    }
+    
+    /* Panels */
+    .panel {
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .panel-header {
+      background: linear-gradient(180deg, #1f1f1f 0%, #161616 100%);
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--orange);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .panel-header .count {
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+    
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    
+    /* Report List */
+    .report-item {
+      padding: 10px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: all 0.1s;
+    }
+    
+    .report-item:hover {
+      background: rgba(255, 102, 0, 0.1);
+      border-color: var(--orange);
+    }
+    
+    .report-item.active {
+      background: rgba(255, 102, 0, 0.15);
+      border-color: var(--orange);
+    }
+    
+    .report-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    
+    .report-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+    
+    .report-tickers {
+      display: flex;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    
+    .ticker-tag {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      background: var(--border);
+      color: var(--text);
+    }
+    
+    .ticker-tag.NVDA { background: #76b900; color: #000; }
+    .ticker-tag.AAPL { background: #555; color: #fff; }
+    .ticker-tag.MSFT { background: #00a4ef; color: #000; }
+    .ticker-tag.GOOGL { background: #4285f4; color: #fff; }
+    .ticker-tag.AMZN { background: #ff9900; color: #000; }
+    .ticker-tag.META { background: #0082fb; color: #fff; }
+    .ticker-tag.TSLA { background: #cc0000; color: #fff; }
+    
+    /* Main Content */
+    .content-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .content-panel .panel-body {
+      padding: 24px;
+      background: #0a0a0a;
+    }
+    
+    .article-header {
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .article-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--orange);
+      margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    
+    .article-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    
+    .article-content {
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    
+    .article-content h1 {
+      font-size: 20px;
+      color: var(--orange);
+      margin: 0 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .article-content h2 {
+      font-size: 14px;
+      color: var(--yellow);
+      margin: 28px 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .article-content h3 {
+      font-size: 13px;
+      color: var(--blue);
+      margin: 20px 0 10px 0;
+    }
+    
+    .article-content p { margin-bottom: 14px; }
+    
+    .article-content ul, .article-content ol {
+      margin: 14px 0;
+      padding-left: 20px;
+    }
+    
+    .article-content li { margin-bottom: 6px; }
+    
+    .article-content strong { color: var(--text-bright); }
+    
+    .article-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 11px;
+    }
+    
+    .article-content th {
+      text-align: left;
+      padding: 8px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--orange);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+    
+    .article-content td {
+      padding: 8px;
+      border: 1px solid var(--border);
+    }
+    
+    .article-content code {
+      background: var(--panel);
+      padding: 2px 6px;
+      font-size: 11px;
+      color: var(--green);
+    }
+    
+    .article-content pre {
+      background: var(--panel);
+      padding: 16px;
+      overflow-x: auto;
+      margin: 16px 0;
+      border: 1px solid var(--border);
+    }
+    
+    .article-content blockquote {
+      border-left: 3px solid var(--orange);
+      padding-left: 16px;
+      margin: 16px 0;
+      color: var(--text-dim);
+    }
+    
+    /* Right Sidebar */
+    .sidebar-panel .panel-body {
+      padding: 12px;
+    }
+    
+    .data-section {
+      margin-bottom: 20px;
+    }
+    
+    .data-section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--orange);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .data-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 11px;
+    }
+    
+    .data-row .label { color: var(--text-dim); }
+    .data-row .value { color: var(--text-bright); font-weight: 500; }
+    .data-row .value.green { color: var(--green); }
+    .data-row .value.red { color: var(--red); }
+    
+    .earnings-item {
+      padding: 8px;
+      background: var(--bg);
+      margin-bottom: 6px;
+      border-left: 3px solid var(--orange);
+    }
+    
+    .earnings-item .ticker {
+      font-weight: 700;
+      color: var(--text-bright);
+    }
+    
+    .earnings-item .date {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    
+    .earnings-item.soon {
+      border-left-color: var(--red);
+      background: rgba(255, 51, 51, 0.1);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--orange); }
+    
+    /* Blinking cursor effect */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
+    .cursor {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--orange);
+      margin-left: 4px;
+      animation: blink 1s infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="logo">EDGE TERMINAL<span class="cursor"></span></div>
+    <div class="top-info">
+      <div><span>TIME</span><span class="value" id="clock">--:--:--</span></div>
+      <div><span>REPORTS</span><span class="value" id="reportCount">0</span></div>
+      <div><span>STATUS</span><span class="value">ONLINE</span></div>
+    </div>
+  </div>
+  
+  <div class="ticker-bar">
+    <button class="ticker-btn active" data-ticker="all">ALL</button>
+    <button class="ticker-btn" data-ticker="NVDA">NVDA</button>
+    <button class="ticker-btn" data-ticker="AAPL">AAPL</button>
+    <button class="ticker-btn" data-ticker="MSFT">MSFT</button>
+    <button class="ticker-btn" data-ticker="GOOGL">GOOGL</button>
+    <button class="ticker-btn" data-ticker="AMZN">AMZN</button>
+    <button class="ticker-btn" data-ticker="META">META</button>
+    <button class="ticker-btn" data-ticker="TSLA">TSLA</button>
+  </div>
+  
+  <div class="terminal-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <span>RESEARCH</span>
+        <span class="count" id="filteredCount">0 items</span>
+      </div>
+      <div class="panel-body" id="reportList"></div>
+    </div>
+    
+    <div class="panel content-panel">
+      <div class="panel-header">
+        <span>ANALYSIS</span>
+        <span class="count" id="articleMeta"></span>
+      </div>
+      <div class="panel-body" id="content">
+        <div class="empty-state">SELECT REPORT TO VIEW</div>
+      </div>
+    </div>
+    
+    <div class="panel sidebar-panel">
+      <div class="panel-header">
+        <span>MARKET DATA</span>
+      </div>
+      <div class="panel-body">
+        <div class="data-section">
+          <div class="data-section-title">Upcoming Earnings</div>
+          <div id="earningsList">
+            <div class="earnings-item soon">
+              <div class="ticker">NVDA</div>
+              <div class="date">Feb 25 • After Close</div>
+            </div>
+            <div class="earnings-item">
+              <div class="ticker">GOOGL</div>
+              <div class="date">Apr 23 • After Close</div>
+            </div>
+            <div class="earnings-item">
+              <div class="ticker">TSLA</div>
+              <div class="date">Apr 28 • After Close</div>
+            </div>
+            <div class="earnings-item">
+              <div class="ticker">META</div>
+              <div class="date">Apr 29 • After Close</div>
+            </div>
+            <div class="earnings-item">
+              <div class="ticker">MSFT</div>
+              <div class="date">Apr 29 • After Close</div>
+            </div>
+            <div class="earnings-item">
+              <div class="ticker">AAPL</div>
+              <div class="date">Apr 30 • After Close</div>
+            </div>
+            <div class="earnings-item">
+              <div class="ticker">AMZN</div>
+              <div class="date">Apr 30 • After Close</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="data-section">
+          <div class="data-section-title">Quick Stats</div>
+          <div class="data-row">
+            <span class="label">Total Reports</span>
+            <span class="value" id="totalReports">-</span>
+          </div>
+          <div class="data-row">
+            <span class="label">Last Update</span>
+            <span class="value" id="lastUpdate">-</span>
+          </div>
+          <div class="data-row">
+            <span class="label">Refresh Rate</span>
+            <span class="value">30s</span>
+          </div>
+        </div>
+        
+        <div class="data-section">
+          <div class="data-section-title">System</div>
+          <div class="data-row">
+            <span class="label">Agent</span>
+            <span class="value green">ACTIVE</span>
+          </div>
+          <div class="data-row">
+            <span class="label">News Monitor</span>
+            <span class="value">PENDING</span>
+          </div>
+          <div class="data-row">
+            <span class="label">Cron Jobs</span>
+            <span class="value green">7 SCHEDULED</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let reports = [];
+    let activeFilter = 'all';
+    let activeReport = null;
+
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    async function loadReports() {
+      try {
+        const res = await fetch('/api/reports');
+        reports = await res.json();
+        document.getElementById('reportCount').textContent = reports.length;
+        document.getElementById('totalReports').textContent = reports.length;
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+        renderReportList();
+      } catch (err) {
+        console.error('Failed to load reports:', err);
+      }
+    }
+
+    function renderReportList() {
+      const filtered = activeFilter === 'all' 
+        ? reports 
+        : reports.filter(r => r.tickers.includes(activeFilter));
+      
+      document.getElementById('filteredCount').textContent = `${filtered.length} items`;
+      
+      const list = document.getElementById('reportList');
+      
+      if (filtered.length === 0) {
+        list.innerHTML = '<div class="empty-state">NO REPORTS FOUND</div>';
+        return;
+      }
+      
+      list.innerHTML = filtered.map(r => `
+        <div class="report-item ${activeReport === r.id ? 'active' : ''}" data-id="${r.id}">
+          <div class="report-title">${r.title}</div>
+          <div class="report-meta">
+            <span>${formatDate(r.updatedAt)}</span>
+            <span>${formatSize(r.size)}</span>
+          </div>
+          <div class="report-tickers">
+            ${r.tickers.map(t => `<span class="ticker-tag ${t}">${t}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+      
+      list.querySelectorAll('.report-item').forEach(item => {
+        item.addEventListener('click', () => loadReport(item.dataset.id));
+      });
+    }
+
+    async function loadReport(id) {
+      activeReport = id;
+      renderReportList();
+      
+      const content = document.getElementById('content');
+      content.innerHTML = '<div class="empty-state">LOADING...</div>';
+      
+      try {
+        const res = await fetch(`/api/reports/${id}`);
+        const report = await res.json();
+        
+        document.getElementById('articleMeta').textContent = formatDate(report.updatedAt);
+        
+        content.innerHTML = `<div class="article-content">${report.html}</div>`;
+      } catch (err) {
+        content.innerHTML = '<div class="empty-state">FAILED TO LOAD REPORT</div>';
+      }
+    }
+
+    function formatDate(date) {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + 
+             d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + 'B';
+      return (bytes / 1024).toFixed(1) + 'KB';
+    }
+
+    // Ticker filter
+    document.querySelectorAll('.ticker-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.ticker-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = btn.dataset.ticker;
+        renderReportList();
+      });
+    });
+
+    loadReports();
+    setInterval(loadReports, 30000);
+  </script>
+</body>
+</html>
